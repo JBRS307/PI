@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -6,7 +7,7 @@
 #define SIZE 40
 
 #define TEST 0
-#define DBG 0    // 1 - dla testow,  0 - dla oceny automatycznej
+// #define DBG 0    // 1 - dla testow,  0 - dla oceny automatycznej
 
 // 5.1.1
 
