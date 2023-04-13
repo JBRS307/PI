@@ -25,14 +25,10 @@ void n_str_copy(char t2D[][STRLEN_MAX], char *ptab[], size_t n){
 }
 
 int compare(const void *p1, const void *p2){
-    char *a = (char*)p1;
-    char *b = (char*)p2;
-    int i = 0;
-    while(1){
-        if(a[i] > b[i]) return 1;
-        else if(a[i] < b[i]) return 0;
-        i++;
-    }
+    // int len_a, len_b;
+    const char *a = *(char**)p1;
+    const char *b = *(char**)p2;
+    return strcmp(a, b);
 }
 
 // Funkcja wypisuje w osobnych liniach n łańcuchów wskazywanych przez elementy tablicy ptab.
@@ -44,32 +40,20 @@ void print_ptab(char *ptab[], size_t n){
 
 // sortuje alfabetycznie n lancuchow wskazywanych w tablicy wskaznikow t  
 void ptab_sort(char *ptab[], size_t n){ //sortuje przez wstawianie
-    for(ulong i = 0; i < n; i++){
-        for(ulong j = i; j > 0; j--){
-            if(compare(ptab[j-1], ptab[j])){
-                char *temp = ptab[j];
-                ptab[j] = ptab[j-1];
-                ptab[j-1] = temp;
-            }
-        }
-    }
-    if(DBG) print_ptab(ptab, n);
+    qsort(ptab, n, sizeof(ptab[0]), compare);
+}
+
+int compare_t2D(const void *p1, const void *p2, const char t2D[][STRLEN_MAX]){
+    int *a = (int*)p1;
+    int *b = (int*)p2;
+    return -strcmp(t2D[*a], t2D[*b]);
 }
 
 // Porzadek odwrotny do alfabetycznego lancuchow zapisanych w tablicy t2D zapisuje w tablicy indices
 void t2D_sort(const char t2D[][STRLEN_MAX], size_t indices[], size_t n){
-    for(ulong i = 0; i < n; i++) indices[i] = i;
-    for(ulong i = 0; i < n; i++){
-        for(ulong j = i; j > 0; j--){
-            if(compare(t2D[indices[j]], t2D[indices[j-1]])){
-                int temp = indices[j];
-                indices[j] = indices[j-1];
-                indices[j-1] = temp;
-            }
-        }
-    }
+    for(int i = 0; i < n; i++) indices[i] = i;
+    qsort_r(indices, n, sizeof(indices[0]), compare_t2D, t2D);
 }
-
 // W wierszach tablicy t2D sa zapisane lancuchy znakowe w dowolnej kolejnosci.
 // Tablica indeksow wierszy indices wyznacza porzadek tych lancuchow.
 // Funkcja wypisuje w osobnych liniach łańcuchy wskazane przez n poczatkowych elementów tablicy indices.
