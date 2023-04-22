@@ -5,7 +5,7 @@
 #define MAX_REL_SIZE 100
 #define MAX_RANGE 100
 
-typedef int cbool;
+typedef char cbool;
 #define true 1
 #define false 0
 
