@@ -62,7 +62,7 @@ cbool in_arr(int *arr, int elem, int n);
 
 // Case 3:
 
-int composition (pair*, int, pair*, int, pair*);
+int composition (pair *R, int n_r, pair *S, int n_s, pair *sor);
 
 // Comparator for pair
 int cmp_pair(const void *a, const void *b) {
@@ -74,8 +74,8 @@ int cmp_pair(const void *a, const void *b) {
 	return p1->first - p2->first;
 }
 
-int insert_int (int *tab, int n, int new_element) {
-}
+// int insert_int (int *tab, int n, int new_element) {
+// }
 
 // Add pair to existing relation if not already there
 int add_relation (pair *relation, int n, pair new_pair) {
@@ -148,13 +148,13 @@ int main(void) {
 			print_int_array(max_elements, no_max_elements);
 			print_int_array(min_elements, no_min_elements);
 			break;
-	// 	case 3:
-	// 		size_2 = read_relation(relation_2);
-	// 		printf("%d\n", composition(relation, size, relation_2, size_2, comp_relation));
-	// 		break;
-	// 	default:
-	// 		printf("NOTHING TO DO FOR %d\n", to_do);
-	// 		break;
+		case 3:
+			size_2 = read_relation(relation_2);
+			printf("%d\n", composition(relation, size, relation_2, size_2, comp_relation));
+			break;
+		default:
+			printf("NOTHING TO DO FOR %d\n", to_do);
+			break;
 	}
 	return 0;
 }
@@ -218,6 +218,7 @@ cbool is_irreflexive(pair* relation, int n){
 cbool is_symmetric(pair *relation, int n){
 	cbool flag = false;
 	for(int i = 0; i < n; i++){
+		flag = false;
 		for(int j = i; j < n; j++){
 			if(relation[j].second == relation[i].first && relation[j].first == relation[i].second){
 				flag = true;
@@ -251,11 +252,9 @@ cbool is_asymmetric(pair *relation, int n){
 
 cbool is_transitive(pair *relation, int n){
 	cbool flag = false;
-	cbool general = false;
 	for(int i = 0; i < n; i++){
 		for(int j = i+1; j < n; j++){
 			if(relation[i].second == relation[j].first){
-				general = true;
 				for(int k = 0; k < n; k++){
 					if(relation[k].first == relation[i].first && relation[k].second == relation[j].second){
 						flag = true;
@@ -266,7 +265,7 @@ cbool is_transitive(pair *relation, int n){
 			}
 		}
 	}
-	return general;
+	return true;
 }
 
 cbool is_connected(pair *relation, int n, int *domain, int n_domain){
@@ -332,4 +331,20 @@ int find_min_elements(pair* relation, int n, int* min_arr){
 		}
 	}
 	return n_min;
+}
+
+int composition (pair *R, int n_r, pair *S, int n_s, pair *sor){
+	int n_comp = 0;
+	pair new_pair;
+
+	for(int i = 0; i < n_r; i++){
+		for(int j = 0; j < n_s; j++){
+			if(R[i].second == S[j].first){
+				new_pair.first = R[i].first;
+				new_pair.second = S[j].second;
+				n_comp = add_relation(sor, n_comp, new_pair);
+			}
+		}
+	}
+	return n_comp;
 }
