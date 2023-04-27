@@ -148,11 +148,45 @@ double upper_bound2(double x) {
 
 // Metoda prostokatow (leftpoint) oblicza przyblizenie calki podwojnej nad obszarem prostokatnym
 double dbl_integr(Func2vFp f, double x1, double x2, int nx, double y1, double y2, int ny){
+    double hx = (x2-x1)/nx;
+    double hy = (y2-y1)/ny;
+    double res = 0;
+    double x, y;
+
+    y = y1;
+    for(int i = 0; i < ny; i++){
+        x = x1;
+        for(int j = 0; j < nx; j++){
+            res += f(x, y);
+            x += hx;
+        }
+        y += hy;
+    }
+    return res*hy*hx;
 }
 
 // Oblicza kwadrature prostokatow midpoint dla calki podwojnej nad obszarem normalnym wzgledem osi 0x
-// double dbl_integr_normal_1(Func2vFp f, double x1, double x2, int nx, double hy, Func1vFp fg, Func1vFp fh)  {
-// }
+double dbl_integr_normal_1(Func2vFp f, double x1, double x2, int nx, double hy, Func1vFp fg, Func1vFp fh){
+    double hx = (x2-x1)/nx;
+    double res = 0;
+    double x, y;
+    double g, h;
+    int ny;
+    double dy;
+
+    for(int i = 0; i < nx; i++){
+        x = x1+hx*i+hx/2;
+        g = fg(x);
+        h = fh(x);
+        ny = (int)round((h-g)/hy);
+        dy = (h-g)/ny;
+        for(int j = 0; j < ny; j++){
+            y = g+dy*j+dy/2;
+            res += f(x, y)*dy;
+        }
+    }
+    return res*hx;
+}
 
 // // Oblicza kwadrature prostokatow leftpoint dla calki podwojnej nad obszarami normalnymi wzgledem osi 0x 
 // double dbl_integr_normal_n(Func2vFp f, double x1, double x2, int nx, double y1, double y2, int ny, Func1vFp fg, Func1vFp fh)  {
@@ -228,20 +262,20 @@ int main(void)
         scanf("%lf %lf %lf", &a, &b, &delta);
         printf("%.5f\n",init_recurs(func_tab[integrand_fun_no],a,b,delta,quad_tab[method_no]));
         break;
-//     case 3: // 7.2.1 calka podwojna nad prostokatem
-//         if(TEST) printf("Wpisz przedzial calkowania i liczbe podprzedzialow wzdluz x: ");
-//         scanf("%lf %lf %d",&x1,&x2,&nx);
-//         if(TEST) printf("Wpisz przedzial calkowania i liczbe podprzedzialow wzdluz y: ");
-//         scanf("%lf %lf %d",&y1,&y2,&ny);
-//         printf("%.5f\n",dbl_integr(func2v_2, x1, x2, nx, y1, y2, ny));
-//         break;
-//     case 4: // 7.2.2 calka podwojna nad obszarem normalnym
-//         if(TEST) printf("Wpisz przedzial calkowania i liczbe podprzedzialow zmiennej x: ");
-//         scanf("%lf %lf %d",&x1,&x2,&nx);
-//         if(TEST) printf("Wpisz dlugosc podprzedzialu wzdluz y: ");
-//         scanf("%lf",&hy);
-//         printf("%.5f\n",dbl_integr_normal_1(func2v_2, x1, x2, nx, hy, lower_bound2, upper_bound2));
-//         break;
+    case 3: // 7.2.1 calka podwojna nad prostokatem
+        if(TEST) printf("Wpisz przedzial calkowania i liczbe podprzedzialow wzdluz x: ");
+        scanf("%lf %lf %d",&x1,&x2,&nx);
+        if(TEST) printf("Wpisz przedzial calkowania i liczbe podprzedzialow wzdluz y: ");
+        scanf("%lf %lf %d",&y1,&y2,&ny);
+        printf("%.5f\n",dbl_integr(func2v_2, x1, x2, nx, y1, y2, ny));
+        break;
+    case 4: // 7.2.2 calka podwojna nad obszarem normalnym
+        if(TEST) printf("Wpisz przedzial calkowania i liczbe podprzedzialow zmiennej x: ");
+        scanf("%lf %lf %d",&x1,&x2,&nx);
+        if(TEST) printf("Wpisz dlugosc podprzedzialu wzdluz y: ");
+        scanf("%lf",&hy);
+        printf("%.5f\n",dbl_integr_normal_1(func2v_2, x1, x2, nx, hy, lower_bound2, upper_bound2));
+        break;
 //     case 5: // 7.2.3 calka podwojna nad wieloma obszarami normalnymi
 //         if(TEST) printf("Wpisz przedzial calkowania i liczbe podprzedzialow wzdluz x: ");
 //         scanf("%lf %lf %d",&x1,&x2,&nx);
