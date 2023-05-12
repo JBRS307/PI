@@ -44,7 +44,7 @@ ComparFp food_compar(const void *a, const void *b){
     Food *f1 = (Food*)a;
     Food *f2 = (Food*)b;
 
-    if((f1->art == f2->art) && (f1->price == f2->price) && (date_compar(f1, f2)))
+    if((!strcmp(f1->art, f2->art)) && (f1->price == f2->price) && (date_compar(f1, f2)))
         return true;
     return false;
 }
@@ -66,36 +66,95 @@ void *bsearch2(const void *key, void *base, size_t nitems, size_t size, ComparFp
 }
 
 void print_art(Food *p, size_t n, char *art) {
+    for(size_t i = 0; i < n; i++){
+        if(!strcmp(p[i].art, art)){
+            printf("%s %.2f %d ", p[i].art, p[i].price, (int)p[i].amount);
+            Date valid_date = p[i].valid_date;
+            printf("%d %d %d\n", valid_date.day, valid_date.month, valid_date.year);
+        }
+    }
 }
 
 Food* add_record(Food *tab, size_t tab_size, int *np, ComparFp compar, Food *new){
-    cbool is_new;
-    Food *new_adr = bsearch2(new, tab, *np, sizeof(Food), date_compar, &is_new);
-    if(new_adr > tab+tab_size){
+    cbool not_new;
+    Food *new_adr = bsearch2(new, tab, (size_t)*np, sizeof(Food), compar, &not_new);
+    if(!not_new){
         if((*np)+1 > FOOD_MAX)
             return NULL;
         
         for(int i = *np; &tab[i] != new_adr; i--){
             tab[i] = tab[i-1];
-        }
+        } 
         *new_adr = *new;
         (*np)++;
         return new_adr;
     }
     else{
-        (*new_adr).amount += new->amount;
+        new_adr->amount += new->amount;
         return new_adr;
     }
 }
 
 int read_stream(Food *tab, size_t size, int no, FILE *stream){
+    int np = 0;
+    int d, m, y;
+    Food new;
 
+    for(int i = 0; i < no; i++){
+        fscanf(stream, "%s %f %f %d %d %d", new.art, &new.price, &new.amount, &d, &m, &y);
+        Date new_date = {d, m, y};
+        new.valid_date = new_date;
+        add_record(tab, size, &np, food_compar, &new);
+    }
+    return np;
 }
 
 int read_stream0(Food *tab, size_t size, int no, FILE *stream) {
 }
 
-float value(Food *food_tab, size_t n, Date curr_date, int anticip) {
+int leap_years(Date d){
+    int leap = d.year;
+
+    if(d.month <= 2)
+        leap--;
+    
+    return leap/4-leap/100+leap/400;
+}
+
+int month_days[13] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+
+int date_diff(long n1, Date d2){
+    long n2;
+
+    // n1 = d1.year*365+d1.day;
+    // for(int i = 1; i <= d1.month-1; i++)
+    //     n1 += month_days[i];
+    // n1 += leap_years(d1);
+    
+    n2 = d2.year*365+d2.day;
+    for(int i = 1; i <= d2.month-1; i++)
+        n2 += month_days[i];
+    n2 += leap_years(d2);
+
+    return (n2-n1); 
+}
+
+float value(Food *food_tab, size_t n, Date curr_date, int delta){
+    float res = 0;
+    long curr_days;
+
+    curr_days = curr_date.year*365+curr_date.day;
+    for(int i = 1; i <= curr_date.month-1; i++)
+        curr_days += month_days[i];
+    curr_days += leap_years(curr_date);
+
+    int curr_value;
+    for(size_t i = 0; i < n; i++){
+        curr_value = date_diff(curr_days, food_tab[i].valid_date);
+        if(curr_value == delta)
+            res += food_tab[i].amount*food_tab[i].price;
+    }
+    return res;
 }
 
 /////////////////////////////////////////////////////////////////
@@ -223,7 +282,7 @@ int main(void)
             if(file==NULL) { printf("Error 1\n"); break; }
         }
         if (TEST) printf("W %d liniach wpisuj dane: nazwa cena ilosc dd mm yyyy: \n",no);
-        n = read_stream0(food_tab,FOOD_MAX,no,file);
+        n = read_stream(food_tab,FOOD_MAX,no,file);
         Date curr_date;
         int anticip;
         if (TEST) printf("Wpisz date odniesienia dd mm yyyy: ");
