@@ -61,12 +61,28 @@ void print_mat(int rows, int cols, int *t){
 
 
 int read_char_lines(char *arr[]){
+	char *line;
+	int arr_ind = 0;
+	size_t str_leng;
+	line = (char*)malloc(BUF_SIZE);
+
+	while(fgets(line, BUF_SIZE, stdin)){
+		str_leng = strlen(line);
+		arr[arr_ind] = (char*)malloc(str_leng);
+		strcpy(arr[arr_ind], line);
+		arr_ind++;
+	}
+	free(line);
+	return arr_ind;
 }
 
-void write_char_line(char *arr[], int n) {
+void write_char_line(char *arr[], int n){
+	printf("%s", arr[n]);
 }
 
-void delete_lines(char *array[]) {
+void delete_lines(char *array[], int arr_len){
+	for(int i = 0; i < arr_len; i++)
+		free(array[i]);
 }
 
 int read_int_lines_cont(int *ptr[]){
@@ -118,19 +134,85 @@ typedef struct {
 	double average;
 } line_type;
 
-int read_int_lines(line_type lines_array[]) {
+double calc_avg(int *arr, int n){
+	double res = 0;
+	for(int i = 0; i < n; i++)
+		res += arr[i];
+	
+	return res/n;
 }
 
-void write_int_line(line_type lines_array[], int n) {
+int read_int_lines(line_type lines_array[]){
+	char *line;
+	int line_len, line_size;
+	int arr_ind = 0;
+	int num;
+
+	line = (char*)malloc(BUF_SIZE);
+
+	char *p, *e;
+	while(fgets(line, BUF_SIZE, stdin)){
+		line_len = line_size = 0;
+		p = line;
+		for(p = line; ; p = e){
+			num = (int)strtol(p, &e, 10);
+			if(p == e)
+				break;
+			
+			if(line_size == 0){
+				line_size++;
+				line_len++;
+				lines_array[arr_ind].values = (int*)malloc(sizeof(int));
+			}else if(line_len == line_size){
+				line_size <<= 1;
+				line_len++;
+				lines_array[arr_ind].values = (int*)realloc(lines_array[arr_ind].values, line_size*sizeof(int));
+			}else
+				line_len++;
+			
+			lines_array[arr_ind].values[line_len-1] = num;
+		}
+		lines_array[arr_ind].len = line_len;
+		lines_array[arr_ind].average = calc_avg(lines_array[arr_ind].values, lines_array[arr_ind].len);
+		arr_ind++;
+	}
+	free(line);
+	return arr_ind;
 }
 
-void delete_int_lines(line_type array[], int line_count) {
+void write_int_line(line_type lines_array[], int n){
+	line_type line = lines_array[n];
+
+	int len = line.len;
+	int *arr = line.values;
+	double avg = line.average;
+
+	for(int i = 0; i < len; i++){
+		printf("%d ", arr[i]);
+	}
+	printf("\n");
+	printf("%.2lf\n", avg);
 }
 
-int cmp (const void *a, const void *b) {
+void delete_int_lines(line_type array[], int line_count){
+	for(int i = 0; i < line_count; i++)
+		free(array[i].values);
 }
 
-void sort_by_average(line_type lines_array[], int line_count) {
+int cmp (const void *a, const void *b){
+	line_type p1 = *(line_type*)a;
+	line_type p2 = *(line_type*)b;
+
+	if(p1.average < p2.average)
+		return -1;
+	else if(p1.average > p2.average)
+		return 1;
+	else
+		return 0;
+}
+
+void sort_by_average(line_type lines_array[], int line_count){
+	qsort(lines_array, line_count, sizeof(line_type), cmp);
 }
 
 typedef struct {
@@ -189,14 +271,14 @@ int main(void) {
 			ptr_array[0] = continuous_array;
 			int ptr_leng = read_int_lines_cont(ptr_array);
 			write_int_line_cont(ptr_array, n);
-			// for(int i = 1; i < ptr_leng; i++)
-				// free(ptr_array[i]);
+			for(int i = 0; i < ptr_leng; i++) //zwalniam tę tablicę, żeby nie było memory leaka
+				free(ptr_array[i]);
 			break;
 		case 3:
 			n = read_int() - 1;
-			read_char_lines(char_lines_array);
+			int arr_len = read_char_lines(char_lines_array);
 			write_char_line(char_lines_array, n);
-			delete_lines(char_lines_array);
+			delete_lines(char_lines_array, arr_len);
 			break;
 		case 4:
 			n = read_int() - 1;
