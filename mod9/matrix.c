@@ -9,7 +9,7 @@
 int *get(int cols, int row, int col, const int *A){
 	int *adr = (int*)A;
 
-	adr += cols*(row-1)+(col-1);
+	adr += cols*row+col;
 	return adr;
 }
 
@@ -20,7 +20,24 @@ void set(int cols, int row, int col, int *A, int value){
 }
 
 void prod_mat(int rowsA, int colsA, int colsB, int *A, int *B, int *AB){
+	int rowsB = colsA;
 	
+	int ia = 0, ja = 0, ib = 0, jb = 0;
+	for(int i = 0; i < rowsA*colsB; i++){
+		int elem = 0;
+		while(ja < colsA){
+			elem += *get(colsA, ia, ja, A)*(*get(colsB, ib, jb, B));
+			ja++;
+			ib++;
+		}
+		set(colsB, ia, jb, AB, elem);
+		ja = 0, ib = 0;
+		ia++;
+		if(ia >= rowsA){
+			ia = 0;
+			jb++;
+		}
+	}
 }
 
 void read_mat(int rows, int cols, int *t){
@@ -33,32 +50,66 @@ void read_mat(int rows, int cols, int *t){
 }
 
 void print_mat(int rows, int cols, int *t){
-	int elems = rows*cols;
-
-	int i = 0, j = 0;
-	while(i*j < elems){
-		while(j < cols){
-			printf("%d ", t[i*cols+j]);
-			j++;
+	for(int i = 0; i < rows; i++){
+		for(int j = 0; j < cols; j++){
+			int elem = *get(cols, i, j, t);
+			printf("%d ", elem);
 		}
 		printf("\n");
-		i++;
 	}
 }
 
-int read_char_lines(char *array[]) {
+
+int read_char_lines(char *arr[]){
 }
 
-void write_char_line(char *array[], int n) {
+void write_char_line(char *arr[], int n) {
 }
 
 void delete_lines(char *array[]) {
 }
 
-int read_int_lines_cont(int *ptr_array[]) {
+int read_int_lines_cont(int *ptr[]){
+	char line[BUF_SIZE];
+	int ptr_ind = 0;
+	size_t line_leng = 0;
+	char *p, *e;
+	long v;
+	int num;
+
+	while(fgets(line, BUF_SIZE, stdin)){
+		line_leng = 0;
+		p = line;
+		for(p = line; ; p = e){
+			v = strtol(p, &e, 10);
+			if(p == e)
+				break;
+			
+			num = (int)v;
+			if(line_leng == 0){
+				line_leng++;
+				ptr[ptr_ind] = (int*)malloc(line_leng*sizeof(int));
+			}else{
+				line_leng++;
+				ptr[ptr_ind] = (int*)realloc(ptr[ptr_ind], line_leng*sizeof(int));
+			}
+			ptr[ptr_ind][line_leng-1] = num;
+		}
+		ptr[ptr_ind] = (int*)realloc(ptr[ptr_ind], (line_leng+1)*sizeof(int));
+		memmove(ptr[ptr_ind]+1, ptr[ptr_ind], line_leng*sizeof(int));
+		ptr[ptr_ind][0] = line_leng;
+		ptr_ind++;
+	}
+	return ptr_ind;
 }
 
-void write_int_line_cont(int *ptr_array[], int n) {
+void write_int_line_cont(int *ptr[], int n){
+	int *line = ptr[n];
+	int len = line[0];
+	for(int i = 1; i <= len; i++){
+		printf("%d ", line[i]);
+	}
+	printf("\n");
 }
 
 typedef struct {
@@ -136,8 +187,10 @@ int main(void) {
 		case 2:
 			n = read_int() - 1; // we count from 1 :)
 			ptr_array[0] = continuous_array;
-			read_int_lines_cont(ptr_array);
+			int ptr_leng = read_int_lines_cont(ptr_array);
 			write_int_line_cont(ptr_array, n);
+			// for(int i = 1; i < ptr_leng; i++)
+				// free(ptr_array[i]);
 			break;
 		case 3:
 			n = read_int() - 1;
