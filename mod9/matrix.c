@@ -86,36 +86,44 @@ void delete_lines(char *array[], int arr_len){
 }
 
 int read_int_lines_cont(int *ptr[]){
-	char line[BUF_SIZE];
+	char *line;
 	int ptr_ind = 0;
 	size_t line_leng = 0;
+	size_t line_size = 0;
 	char *p, *e;
-	long v;
 	int num;
+
+	line = (char*)malloc(BUF_SIZE);
 
 	while(fgets(line, BUF_SIZE, stdin)){
 		line_leng = 0;
 		p = line;
 		for(p = line; ; p = e){
-			v = strtol(p, &e, 10);
+			num = (int)strtol(p, &e, 10);
 			if(p == e)
 				break;
 			
-			num = (int)v;
 			if(line_leng == 0){
 				line_leng++;
+				line_size++;
 				ptr[ptr_ind] = (int*)malloc(line_leng*sizeof(int));
-			}else{
+			}else if(line_leng == line_size){
 				line_leng++;
-				ptr[ptr_ind] = (int*)realloc(ptr[ptr_ind], line_leng*sizeof(int));
-			}
+				line_size <<= 1;
+				ptr[ptr_ind] = (int*)realloc(ptr[ptr_ind], line_size*sizeof(int));
+			}else
+				line_leng++;
+			
 			ptr[ptr_ind][line_leng-1] = num;
 		}
-		ptr[ptr_ind] = (int*)realloc(ptr[ptr_ind], (line_leng+1)*sizeof(int));
+		if(line_leng == line_size)
+			ptr[ptr_ind] = (int*)realloc(ptr[ptr_ind], (line_leng+1)*sizeof(int));
+
 		memmove(ptr[ptr_ind]+1, ptr[ptr_ind], line_leng*sizeof(int));
 		ptr[ptr_ind][0] = line_leng;
 		ptr_ind++;
 	}
+	free(line);
 	return ptr_ind;
 }
 
@@ -219,22 +227,54 @@ typedef struct {
 	int r, c, v;
 } triplet;
 
-int read_sparse(triplet *triplet_array, int n_triplets) {
+int read_sparse(triplet *arr, int n_triplets){
+	for(int i = 0; i < n_triplets; i++){
+		scanf("%d %d %d", &arr[i].r, &arr[i].c, &arr[i].v);
+	}
+	return n_triplets;
 }
 
-int cmp_triplets(const void *t1, const void *t2) {
+int cmp_triplets(const void *t1, const void *t2){
+	triplet a = *(triplet*)t1;
+	triplet b = *(triplet*)t2;
+
+	if(a.r == b.r)
+		return a.c - b.c;
+	return a.r - b.r;
 }
 
-void make_CSR(triplet *triplet_array, int n_triplets, int rows, int *V, int *C, int *R) {
+void make_CSR(triplet *triplets, int n_triplets, int rows, int *V, int *C, int *R){
+	qsort(triplets, n_triplets, sizeof(triplet), cmp_triplets);
+
+	for(int i = 0; i < n_triplets; i++){
+		V[i] = triplets[i].v;
+		C[i] = triplets[i].c;
+		R[triplets[i].r + 1]++;
+	}
+	for(int i = 1; i < rows+1; i++){
+		R[i] += R[i-1];
+	}
 }
 
-void multiply_by_vector(int rows, const int *V, const int *C, const int *R, const int *x, int *y) {
+//rows - liczba wierszy macierzy
+void multiply_by_vector(int rows, const int *V, const int *C, const int *R, const int *x, int *y){
+	for(int i = 0; i < rows; i++){
+		y[i] = 0;
+		for(int j = 0; j < R[i+1]-R[i]; j++){
+			y[i] += V[R[i]+j]*x[C[R[i]+j]];
+		}
+	}
 }
 
-void read_vector(int *v, int n) {
+void read_vector(int *v, int n){
+	for(int i = 0; i < n; i++)
+		scanf("%d", &v[i]);
 }
 
-void write_vector(int *v, int n) {
+void write_vector(int *v, int n){
+	for(int i = 0; i < n; i++)
+		printf("%d ", v[i]);
+	printf("\n");
 }
 
 int read_int() {
