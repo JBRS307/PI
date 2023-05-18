@@ -20,8 +20,6 @@ void set(int cols, int row, int col, int *A, int value){
 }
 
 void prod_mat(int rowsA, int colsA, int colsB, int *A, int *B, int *AB){
-	int rowsB = colsA;
-	
 	int ia = 0, ja = 0, ib = 0, jb = 0;
 	for(int i = 0; i < rowsA*colsB; i++){
 		int elem = 0;
