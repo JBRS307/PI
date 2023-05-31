@@ -207,7 +207,25 @@ void insertInOrder(List *list, void *a){
 /////////////////// Funkcje do zadania 11.1.2
 
 // Dodaje element na końcu listy bez korzystania z pola tail
-void pushBack_v0(List *list, void *data) {
+void pushBack_v0(List *list, void *data){
+    Node *new = (Node*)malloc(sizeof(Node));
+    new->data = data;
+    new->next = NULL;
+    if(new == NULL)
+        exit(MEMORY_ALLOCATION_ERROR);
+    
+    if(!list->head){
+        list->head = new;
+        list->tail = new;
+        return;
+    }
+    Node *curr = list->head;
+
+    while(curr->next != NULL)
+        curr = curr->next;
+    
+    curr->next = new;
+    list->tail = new;
 }
 
 
@@ -252,10 +270,15 @@ typedef struct DataWord {
     int counter;
 } DataWord;
 
-void dump_word (const void *d) {
+void dump_word (const void *d){
+    DataWord *word = (DataWord*)d;
+    printf("%s ", word->word);
 }
 
-void free_word(void *d) {
+void free_word(void *d){
+    DataWord *w = (DataWord*)d;
+    free(w->word);
+    free(w);
 }
 
 int cmp_word_alphabet(const void *a, const void *b) {
@@ -275,7 +298,12 @@ void dumpList_word_if(List *plist, int n) {
 // Przydziela pamięć dla łańcucha string i struktury typu DataWord.
 // Do przydzielonej pamięci wpisuje odpowiednie dane.
 // Zwraca adres struktury.
-void *create_data_word(char *string, int counter) {
+void *create_data_word(char *string, int counter){
+    DataWord *new = (DataWord*)malloc(sizeof(DataWord));
+    if(new == NULL)
+        exit(MEMORY_ALLOCATION_ERROR);
+    new->word = strndup(string, strlen(string));
+    new->counter = counter;
 }
 
 //////////////////////////////////////////////////
@@ -289,7 +317,7 @@ void *create_data_word(char *string, int counter) {
 void stream_to_list(List *list, FILE *stream, CompareDataFp cmp) {
     DataWord *data;
     char *p, buf[BUFFER_SIZE];
-    char delimits[] = " \r\t\n.,?!-";
+    char delimits[] = " \r\t\n.,?!-:;";
     if(cmp) list->compareData = cmp;
     while(fgets(buf,BUFFER_SIZE,stream)) {
         p = strtok(buf, delimits);
