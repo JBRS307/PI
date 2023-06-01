@@ -52,6 +52,17 @@ char *safe_strdup(char *str) {
 ////////////////////////////////////////////////////////////////
 // Funkcje uniwersalne (ogolnego przeznaczenia) obsługi listy
 
+char *str_tolwr(char *str){
+    int n = (int)strlen(str);
+    char *res = (char*)malloc(n);
+    strcpy(res, str);
+
+    for(int i = 0; i < n; i++)
+        res[i] = tolower(str[i]);
+    
+    return res;
+}
+
 // Inicjuje listę
 void init_List(List *list, ConstDataFp dump, DataFp free, CompareDataFp cmp, DataFp modify) {
     list->head = NULL;
@@ -188,10 +199,21 @@ void insertInOrder(List *list, void *a){
     new_node->data = a;
     new_node->next = NULL;
 
+    if(!list->head){
+        list->head = new_node;
+        list->tail = new_node;
+        (list->size)++;
+        return;
+    }
+
     Node *insert_after = findInsertionPoint((const List*)list, new_node, &in_list);
 
-    if(in_list)
-        list->modifyData(a);
+    if(in_list){
+        if(list->modifyData)
+            list->modifyData(insert_after);
+        free(new_node);
+        return;
+    }
 
     if(insert_after == NULL){
         new_node->next = list->head;
@@ -281,18 +303,50 @@ void free_word(void *d){
     free(w);
 }
 
-int cmp_word_alphabet(const void *a, const void *b) {
+int cmp_word_alphabet(const void *a, const void *b){
+    DataWord *w1 = (DataWord*)a;
+    DataWord *w2 = (DataWord*)b;
+
+    char *s1 = str_tolwr(w1->word);
+    char *s2 = str_tolwr(w2->word);
+
+    int res = strcoll(s1, s2);
+    free(s1);
+    free(s2);
+    return res;
 }
 
-int cmp_word_counter(const void *a, const void *b) {
+// Sprawdza czy wordcounter wyrazu zgadza się z zadanym
+int cmp_word_counter(const void *a, const void *b){
+    DataWord *w = (DataWord*)a;
+    int *n = (int*)b;
+
+    return w->counter == *n;
 }
 
-void modify_word(void *a) {
+void modify_word(void *a){
+    Node *temp = (Node*)a;
+    DataWord *w = (DataWord*)temp->data;
+
+    (w->counter)++;
 }
 
 // Wypisz dane elementów spełniających warunek równości sprawdzany funkcją 
 // wskazywaną w polu compareData nagłówka listy
-void dumpList_word_if(List *plist, int n) {
+void dumpList_word_if(List *plist, int n){
+    Node *curr = plist->head;
+    if(curr == NULL)
+        return;
+    
+    while(curr != NULL){
+        DataWord *w = (DataWord*)curr->data;
+        if(plist->compareData(w, &n)){
+            char *lwr = str_tolwr(w->word);
+            printf("%s ", str_tolwr(w->word));
+            free(lwr);
+        }
+        curr = curr->next;
+    }
 }
 
 // Przydziela pamięć dla łańcucha string i struktury typu DataWord.
@@ -302,7 +356,9 @@ void *create_data_word(char *string, int counter){
     DataWord *new = (DataWord*)malloc(sizeof(DataWord));
     if(new == NULL)
         exit(MEMORY_ALLOCATION_ERROR);
-    new->word = strndup(string, strlen(string));
+    // long c = strlen(string);
+    new->word = (char*)malloc(strlen(string));
+    strcpy(new->word, string);
     new->counter = counter;
 }
 
