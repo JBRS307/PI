@@ -151,6 +151,8 @@ void remove_at(List *list, size_t n){
 
 // return the number of digits of number n
 size_t digits(int n){
+	if(n == 0)
+		return (size_t)1;
     size_t res = 0;
     while(n){
         n /= 10;
